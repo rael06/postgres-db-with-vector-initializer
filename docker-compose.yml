@@ -1,0 +1,54 @@
+version: "3.8"
+
+volumes:
+  db_storage:
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    networks:
+      - db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - DATABASE_USERNAME
+      - DATABASE_PASSWORD
+      - DATABASE_NAME
+    ports:
+      - ${DATABASE_PORT}:5432
+    volumes:
+      - db_storage:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  initdb:
+    image: ${DATABASE_NAME}-postgres-db-initializer:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - db
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - DATABASE_USERNAME
+      - DATABASE_PASSWORD
+      - DATABASE_NAME
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  db:
+    driver: bridge
