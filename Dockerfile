@@ -10,4 +10,4 @@ COPY init-data.sh /init-data.sh
 RUN chmod +x /init-data.sh
 
 # start app
-CMD ["/init-data.sh"]
+ENTRYPOINT ["/init-data.sh"]
